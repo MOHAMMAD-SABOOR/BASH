@@ -20,10 +20,14 @@ ok "Running with root privileges."
 # Read inputs
 # -----------------------------
 read -rp "Enter username: " USERNAME
+read -rp "Enter REALM (EXAMPLE.COM): " REALM
 read -rp "Enter existing Linux group for the user: " USER_GROUP
 
+PRINCIPAL="${USERNAME}@${REALM}"
 HDFS_HOME="/user/$USERNAME"
-TEMP_PASSWORD=$(openssl rand -base64 12) # Strong random password generator.
+
+# Strong Random password.
+TEMP_PASSWORD=$(openssl rand -base64 12)
 
 # -----------------------------
 # Validations
@@ -42,6 +46,7 @@ ok "POSIX user created and set password will be forced to change at first login.
 # -----------------------------
 # Create Kerberos Principal
 # -----------------------------
+kadmin.local -q "getprinc $USERNAME" &>/dev/null && err "Kerberos principal already exists."
 kadmin.local -q "addprinc -pw $TEMP_PASSWORD $USERNAME"
 ok "Kerberos principal created."
 
@@ -59,6 +64,7 @@ ok "HDFS home directory created and permissions are applied."
 echo "======================================="
 echo "User onboarding completed successfully."
 echo "USERNAME       : $USERNAME"
+echo "KERBEROS ID    : $PRINCIPAL"
 echo "TEMP PASSWORD  : $TEMP_PASSWORD"
 echo "(User must change password at first login)"
 echo "======================================="
